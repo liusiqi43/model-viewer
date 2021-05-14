@@ -1,0 +1,9 @@
+commit 94a25d6c9cb4679554a4114d075ed2c0a1bc91ba
+Author: Emmett Lalish <elalish@google.com>
+Date:   Fri May 14 10:54:54 2021 -0700
+
+    simplified USDZ and added docs (#2380)
+    
+    * simplified USDZ and added docs
+    
+    * more docs
