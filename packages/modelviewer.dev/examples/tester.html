@@ -72,27 +72,33 @@
     }
 
     .hotspot{
-      width: 20px;
-      height: 20px;
-      border-radius: 10px;
-      border: none;
-      background-color: blue;
+      width: 42px;
+      height: 42px;
+      border: 6px solid black;
+      border-radius: 24px;
+      background-color: white;
+      border-color: lightgray;
     }
 
     .annotation{
-      background-color: #888888;
+      background-color: #ecf0f1;
       position: absolute;
       transform: translate(10px, 10px);
-      border-radius: 10px;
+      border-radius: 5px;
       padding: 10px;
       text-align: left;
     }
 
     .hotspot.selected{
-      background-color: red;
+      border-color: #f39c12;
+      background-color: #f1c40f;
     }
 
     .hotspot:not(.selected) > .annotation{
+      display: none;
+    }
+
+    .annotation.unset{
       display: none;
     }
 
@@ -101,122 +107,95 @@
         display: none;
       }
     }
+
+    /* The popup form - hidden by default */
+    .form-popup {
+      display: none;
+      position: fixed;
+      bottom: 400px;
+      right: 15px;
+      border: 3px solid #f1f1f1;
+      z-index: 9;
+    }
+
+    .form-popup.active {
+      display: block;
+    }
+
+    /* Add styles to the form container */
+    .form-container {
+      max-width: 300px;
+      padding: 10px;
+      background-color: white;
+    }
+
+    /* Full-width input fields */
+    .form-container input[type=text], .form-container input[type=password] {
+      width: 100%;
+      padding: 15px;
+      margin: 5px 0 22px 0;
+      border: none;
+      background: #f1f1f1;
+    }
+
+    /* When the inputs get focus, do something */
+    .form-container input[type=text]:focus, .form-container input[type=password]:focus {
+      background-color: #ddd;
+      outline: none;
+    }
+
+    /* Set a style for the submit/login button */
+    .form-container .btn {
+      background-color: #04AA6D;
+      color: white;
+      padding: 16px 20px;
+      border: none;
+      cursor: pointer;
+      width: 49%;
+      margin-left: auto;
+      margin-right: auto;
+      margin-bottom:10px;
+      opacity: 0.8;
+      display: inline-block;
+    }
+
+    /* Add a red background color to the cancel button */
+    .form-container .cancel {
+      background-color: red;
+    }
+
+    /* Add some hover effects to buttons */
+    .form-container .btn:hover, .open-button:hover {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
 
   <div id="container">
     <div id="instructions">
-    <h1>
-      <a href="https://github.com/google/model-viewer" target="_blank" rel="noopener">&lt;model-viewer&gt;</a>
-    </h1>
+    <h1>Model Studio</h1>
     Drop a <a href="https://github.com/KhronosGroup/glTF" target="_blank" rel="noopener">glTF or GLB</a> for the model =><br/>
-    Drop an <a href="https://hdrihaven.com/" target="_blank" rel="noopener">HDR or JPG</a> for the skybox =><br/>
     <input type="file" id="input" multiple><br/><br/>
-
-    <label for="src">src:</label>
-    <select id="src">
-      <option value="../shared-assets/models/Astronaut.glb">Astronaut</option>
-      <option value="../shared-assets/models/glTF-Sample-Models/2.0/BoomBox/glTF-Binary/BoomBox.glb">Boom Box</option>
-      <option value="../shared-assets/models/glTF-Sample-Models/2.0/BrainStem/glTF-Binary/BrainStem.glb">Brain Stem</option>
-      <option value="../shared-assets/models/glTF-Sample-Models/2.0/Corset/glTF-Binary/Corset.glb">Corset</option>
-      <option value="../shared-assets/models/glTF-Sample-Models/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb" selected>Damaged Helmet</option>
-      <option value="../shared-assets/models/glTF-Sample-Models/2.0/FlightHelmet/glTF/FlightHelmet.gltf">Flight Helmet</option>
-      <option value="../shared-assets/models/glTF-Sample-Models/2.0/Lantern/glTF-Binary/Lantern.glb">Lantern</option>
-      <option value="../shared-assets/models/glTF-Sample-Models/2.0/Suzanne/glTF/Suzanne.gltf">Monkey</option>
-      <option value="../shared-assets/models/glTF-Sample-Models/2.0/SpecGlossVsMetalRough/glTF-Binary/SpecGlossVsMetalRough.glb">Water Bottles</option>
-      <option value="../shared-assets/models/RobotExpressive.glb">Robot Expressive</option>
-      <option value="../shared-assets/models/alpha-blend-litmus.glb">Transparency Test</option>
-      <option value="../shared-assets/models/glTF-Sample-Models/2.0/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf">Metal Rough Spheres</option>
-    </select><br/>
-    
-    <label for="environmentImage">environment-image:</label>
-    <select id="environmentImage">
-      <option value="" selected>default</option>
-      <option value="../shared-assets/environments/spruit_sunrise_1k_HDR.hdr">spruit sunrise HDR</option>
-      <option value="../shared-assets/environments/spruit_sunrise_1k_LDR.jpg">spruit sunrise JPG</option>
-      <option value="../assets/music_hall_01_1k.hdr">music hall</option>
-      <option value="../assets/whipple_creek_regional_park_04_1k.hdr">whipple creek</option>
-      <option value="../shared-assets/environments/aircraft_workshop_01_1k.hdr">aircraft workshop</option>
-      <option value="../assets/pillars_1k.hdr">pillars</option>
-    </select><br/>
-
-    <label for="useSkybox">use as skybox:</label>
-    <input id="useSkybox" type="checkbox" disabled="true"><br/>
-
-    <label for="exposure">exposure:</label>
-    <input id="exposure" type="range" step="0.01" min="0" max="2" value="1">
-    <input id="exposureValue" value="1" class="number"><br/>
-
-    <label for="shadowIntensity">shadow-intensity:</label>
-    <input id="shadowIntensity" type="range" step="0.01" min="0" max="1" value="0">
-    <input id="shadowIntensityValue" value="0" class="number"><br/>
-
-    <label for="shadowSoftness">shadow-softness:</label>
-    <input id="shadowSoftness" type="range" step="0.01" min="0" max="1" value="1">
-    <input id="shadowSoftnessValue" value="1" class="number"><br/>
-
-    <label for="autoRotate">auto-rotate:</label>
-    <input id="autoRotate" type="checkbox"><br/><br/>
-
-    To create a seamless poster:<br/>
-    Orient model and resize window to desired size (small is recommended), then click:<br/>
-    <button onclick="createPoster()">Create Poster</button><br/>
-    Then resize window to any aspect ratio and click:<br/>
-    <button id="display" onclick="reloadScene()">Display Poster</button><br/>
-    Click the model to dismiss the poster and interact. To save your poster, click:<br/>
-    <button id="download" onclick="downloadPoster()">Download Poster</button><br/>
-    camera-orbit:
-		<div id="cameraOrbit"></div><br/><br/>
-		
-		To calculate hotspot locations, click:<br/>
-		<button onclick="addHotspot()">Add Hotspot</button><br/>
-		Then click on the model.<br/>
-		To remove a hotspot, select it, then click:<br/>
-		<button onclick="removeHotspot()">Remove Hotspot</button><br/>
-    
+	  Double click to add an annotation.<br/>
     </div> 
-    <model-viewer id="loading-demo" autoplay camera-controls interaction-prompt="none"
-      src="../shared-assets/models/glTF-Sample-Models/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb" alt="A 3D model">
+    <model-viewer id="loading-demo" autoplay auto-rotate camera-controls
+      src="../shared-assets/models/Astronaut.glb" alt="A 3D model">
     </model-viewer>
+
+    <div class="form-popup" id="annotation-view">
+      <div class="form-container">
+        <label for="annotation"><h1>Annotation</h1></label>
+        <input type="text" id="annotation" placeholder="Enter annotation." name="annotation" required>
+
+        <div>
+          <button type="submit" class="btn" onclick="submitAnnotation()">Annotate</button>
+          <button type="button" class="btn cancel" onclick="removeHotspot()">Delete</button>
+        </div>
+      </div>
+    </div>
+
   </div>
-
-  <div class="footer">
-    <ul>
-	  <li class="attribution">
-        <a href="https://poly.google.com/view/dLHpzNdygsg">Astronaut</a> by <a href="https://poly.google.com/user/4aEd8rQgKu2">Poly</a>,
-        licensed under <a href="https://creativecommons.org/licenses/by/2.0/">CC-BY</a>.
-      </li>
-
-      <li class="attribution">
-        <a href="https://github.com/KhronosGroup/glTF-Sample-Models/tree/master/2.0/DamagedHelmet">Damaged Helmet</a> by <a href="https://sketchfab.com/theblueturtle_">theblueturtle_</a>,
-        licensed under <a href="https://creativecommons.org/licenses/by-nc/3.0/us/">Creative Commons Attribution-NonCommercial</a>.
-	  </li>
-	  
-	  <li class="attribution">
-		<a href="https://github.com/mrdoob/three.js/tree/dev/examples/models/gltf/RobotExpressive">RobotExpressive</a> by <a href="https://www.patreon.com/quaternius">Tomás Laulhé</a>,
-		licensed under <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>.
-	  </li>
-
-      <li class="attribution">
-        <a href="https://hdrihaven.com/hdri/?h=small_hangar_01">small_hangar_01_1k.jpg</a> by <a href="https://hdrihaven.com">HDRI Haven</a>,
-        licensed under <a href="https://hdrihaven.com/p/license.php">CC0</a>.
-      </li>
-
-      <li class="attribution">
-        <a href="https://hdrihaven.com/hdri/?h=whipple_creek_regional_park_04">whipple_creek_regional_park_04_1k.hdr</a> by <a href="https://hdrihaven.com">HDRI Haven</a>,
-        licensed under <a href="https://hdrihaven.com/p/license.php">CC0</a>.
-      </li>
-    </ul>
-    <div style="margin-top:24px;" class="copyright">©Copyright 2018-2020 Google Inc. Licensed under the Apache License 2.0.</div>
-    <div><a href="https://github.com/google/model-viewer">Github</a> ∙ <a href="https://model-viewer.glitch.me/">Glitch</a> ∙ <a href="https://github.com/google/model-viewer/issues">Bug report</a></div>
-  </div>
-
   <script type="module" src="./built/tester.js"></script>
-
-  <!-- Documentation-specific dependencies: -->
-  <script type="module"
-      src="./built/dependencies.js">
-  </script>
 </body>
 </html>

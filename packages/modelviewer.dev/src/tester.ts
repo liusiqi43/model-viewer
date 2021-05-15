@@ -17,114 +17,19 @@ import {ModelViewerElement} from '@google/model-viewer/lib/model-viewer';
 import {SimpleDropzone} from 'simple-dropzone';
 
 const viewer = document.getElementById('loading-demo') as ModelViewerElement;
-
 const inputElement = document.querySelector('#input');
+const annotationView = document.getElementById('annotation-view') as HTMLElement;
+const annotationText = document.getElementById('annotation') as HTMLInputElement;
 const dropControl = new SimpleDropzone(viewer, inputElement);
 dropControl.on('drop', ({files}: any) => load(files));
-
-(['src', 'environmentImage'] as Array<'src'|'environmentImage'>)
-    .forEach((property) => {
-      document.getElementById(`${property}`)!.addEventListener(
-          'input', (event) => {
-            viewer[property] = (event.target as HTMLInputElement).value;
-            if (viewer.environmentImage === '') {
-              useSkybox.disabled = true;
-              useSkybox.checked = false;
-              viewer.skyboxImage = null;
-            } else {
-              useSkybox.disabled = false;
-            }
-            if (useSkybox.checked) {
-              viewer.skyboxImage = viewer.environmentImage;
-            }
-            if (property === 'src') {
-              resetModel();
-            }
-          });
-    });
 
 function resetModel() {
   viewer.reveal = 'auto';
   viewer.dismissPoster();
-  downloadButton.disabled = true;
-  displayButton.disabled = true;
   // remove hotspots
   while (viewer.firstChild) {
     viewer.removeChild(viewer.firstChild);
   }
-}
-
-const useSkybox = document.getElementById('useSkybox') as HTMLInputElement;
-useSkybox.addEventListener('change', (_event) => {
-  if (useSkybox.checked) {
-    viewer.skyboxImage = viewer.environmentImage;
-  } else {
-    viewer.skyboxImage = null;
-  }
-});
-
-(['exposure', 'shadowIntensity', 'shadowSoftness'] as
- Array<'exposure'|'shadowIntensity'|'shadowSoftness'>)
-    .forEach((property) => {
-      const input = document.getElementById(`${property}`) as HTMLInputElement;
-      const output =
-          document.getElementById(`${property}Value`) as HTMLInputElement;
-      input.addEventListener('input', (event) => {
-        output.value = (event.target as HTMLInputElement).value;
-        viewer[property] = parseFloat(output.value);
-      });
-      output.addEventListener('input', (event) => {
-        input.value = (event.target as HTMLInputElement).value;
-        viewer[property] = parseFloat(output.value);
-      });
-    });
-
-(['autoRotate'] as Array<'autoRotate'>).forEach((property) => {
-  const checkbox = document.getElementById(`${property}`) as HTMLInputElement;
-  checkbox.addEventListener('change', (_event) => {
-    viewer[property] = checkbox.checked;
-  });
-});
-
-let posterUrl = '';
-const a = document.createElement('a');
-const downloadButton = document.getElementById('download') as HTMLButtonElement;
-const displayButton = document.getElementById('display') as HTMLButtonElement;
-downloadButton.disabled = true;
-displayButton.disabled = true;
-const orbitString = document.getElementById('cameraOrbit') as HTMLDivElement;
-
-export async function createPoster() {
-  const orbit = viewer.getCameraOrbit();
-  orbitString.textContent = `${orbit.theta}rad ${orbit.phi}rad auto`;
-  viewer.fieldOfView = 'auto';
-  viewer.jumpCameraToGoal();
-  await new Promise(resolve => requestAnimationFrame(() => resolve()));
-  URL.revokeObjectURL(posterUrl);
-  const blob = await viewer.toBlob({mimeType: 'image/png', idealAspect: true});
-  posterUrl = URL.createObjectURL(blob);
-  downloadButton.disabled = false;
-  displayButton.disabled = false;
-}
-
-export function reloadScene() {
-  viewer.poster = posterUrl;
-  viewer.reveal = 'interaction';
-  viewer.cameraOrbit = orbitString.textContent!;
-  viewer.jumpCameraToGoal();
-  const src = viewer.src;
-  viewer.src = null;
-  viewer.src = src;
-}
-
-export function downloadPoster() {
-  a.href = posterUrl;
-  a.download = 'poster.png';
-  a.click();
-}
-
-export function addHotspot() {
-  viewer.addEventListener('click', onClick);
 }
 
 let hotspotCounter = 0;
@@ -134,6 +39,7 @@ export function removeHotspot() {
   if (selectedHotspot != null) {
     viewer.removeChild(selectedHotspot);
   }
+  annotationView.classList.remove('active');
 }
 
 function select(hotspot: HTMLElement) {
@@ -142,9 +48,13 @@ function select(hotspot: HTMLElement) {
   }
   hotspot.classList.add('selected');
   selectedHotspot = hotspot;
+
+  annotationText.value = hotspot.children[0].textContent!;
+  annotationView.classList.add('active');
 }
 
-function onClick(event: MouseEvent) {
+viewer.addEventListener('dblclick', onDoubleClick);
+function onDoubleClick(event: MouseEvent) {
   const rect = viewer.getBoundingClientRect();
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
@@ -163,25 +73,44 @@ function onClick(event: MouseEvent) {
   if (normal != null) {
     hotspot.dataset.normal = normal.toString();
   }
+
+  const label = document.createElement('div');
+  label.classList.add("annotation");
+  label.classList.add("unset");
+  label.textContent = "";
+  hotspot.appendChild(label);
+
   viewer.appendChild(hotspot);
 
   select(hotspot);
   hotspot.addEventListener('click', () => {select(hotspot)});
 
-  const label = document.createElement('div');
-  label.classList.add('annotation');
-  label.textContent =
-      'data-position:\r\n' + position + '\r\ndata-normal:\r\n' + normal;
-  hotspot.appendChild(label);
-
-  viewer.removeEventListener('click', onClick);
+  annotationView.classList.add('active');
 }
 
-(self as any).createPoster = createPoster;
-(self as any).reloadScene = reloadScene;
-(self as any).downloadPoster = downloadPoster;
-(self as any).addHotspot = addHotspot;
+viewer.addEventListener('click', onClick);
+function onClick(event: MouseEvent) {
+  if (event.target != viewer) {
+    return;
+  }
+  for (let i = 0; i < viewer.children.length; i++) {
+    viewer.children[i].classList.remove('selected');
+  }
+  annotationView.classList.remove('active');
+}
+
+
+function submitAnnotation() {
+  if (selectedHotspot != null) {
+    selectedHotspot.children[0].textContent = annotationText.value;
+    selectedHotspot.children[0].classList.remove("unset");
+  }
+  annotationView.classList.remove('active');
+}
+
 (self as any).removeHotspot = removeHotspot;
+(self as any).submitAnnotation = submitAnnotation;
+
 
 function load(fileMap: Map<string, File>) {
   let rootPath: string;
@@ -225,9 +154,6 @@ function load(fileMap: Map<string, File>) {
       viewer.environmentImage = URL.createObjectURL(file) + '#.hdr';
     } else if (filename.match(/\.(png|jpg)$/)) {
       viewer.environmentImage = URL.createObjectURL(file);
-    }
-    if (useSkybox.checked) {
-      viewer.skyboxImage = viewer.environmentImage;
     }
   }
 }
